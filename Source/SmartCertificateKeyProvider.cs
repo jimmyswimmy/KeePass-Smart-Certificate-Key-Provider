@@ -39,8 +39,13 @@
                     X509Certificate2Collection matching_certificates = myStore.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, true);
                     certificates = matching_certificates.Cast<X509Certificate2>().ToArray();
                 }
+                else
+                {
+                    System.IO.StreamWriter file = new System.IO.StreamWriter(@"X509_thumbprint.txt");
+                    file.Close();
+                }
 
-                myStore.Close();
+                    myStore.Close();
 
                 return certificates;
             }
@@ -118,12 +123,12 @@
             {
                 try
                 {
-                    if (certificate.PrivateKey is RSA rsa)
+		    using (RSACng rsaCng = certificate.GetRSAPrivateKey() as RSACng)
                     {
                         CertificateCache.StoreCachedValue(keyProviderQueryContext.DatabasePath, certificate.Thumbprint);
 
                         // Using HashAlgorithmName.SHA1 for backward compatibility
-                        return rsa.SignData(DataToSign, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1); // DO NOT CHANGE THIS!!!!;
+                        return rsaCng.SignData(DataToSign, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1); // DO NOT CHANGE THIS!!!!;
                     }
                 }
                 catch (Exception ex)
